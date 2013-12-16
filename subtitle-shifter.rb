@@ -1,5 +1,4 @@
 require 'optparse'
-require 'yaml'
 
 # need to verify SRT file format first
 # how many operation options needed? add, substract, ..
@@ -55,6 +54,7 @@ def to_ms(h, m, s, ms)
 	ms + (s * 1000) + (m * 60000) + (h * 3600000)
 end
 
+# Convert the number back to the format
 def format_result(ms)
 	h = ms / HOUR_MS
 	ms -= h * HOUR_MS
@@ -82,11 +82,6 @@ def format_result(ms)
 	"#{h}:#{m}:#{s},#{ms}"
 end
 
-def calculate_time(s, ms)
-	# do the time calculation
-	
-end
-
 def change_time(time, h, m, s, ms)
 	time =~ /(\d{2}):(\d{2}):(\d{2}),(\d+)/
 	ms_time = to_ms($1.to_i, $2.to_i, $3.to_i, $4.to_i) + to_ms(h, m, s, ms)
@@ -100,18 +95,13 @@ if options[:add] && options[:substract] == true
 	exit
 end
 
-# Opening file..
+# Opening and writing file..
 inputfile = options[:file].to_s
 def write_file(input, output, h, m, s, ms)
-# if options[:file]
-	# file2 = Array.new
-	# File.readlines(input).each do |line|
 	File.open(input) do |file|
 		# Get line with specific expression
 		@line2 = file.readlines.join
 		@line2.gsub!(/\d{2}:\d{2}:\d{2},\d+/) {|time| change_time(time, h, m, s, ms)}
-		# puts @line2
-  		#puts line.gsub(/-->/, "CHANGED")
 	end
 	File.open(output, "w") do |file|
     	file.write(@line2)
@@ -136,6 +126,8 @@ end
 outputfile = ARGV[0]
 
 write_file(inputfile, outputfile, 0, 0, s, ms)
+
+puts "Output file: #{outputfile}"
 
 # Debugging tools
 #puts Dir.pwd
