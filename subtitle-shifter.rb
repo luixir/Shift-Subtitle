@@ -46,16 +46,52 @@ end.parse! # Parse()
 #----------------------------------------------------------#
 # Core code goes here									   #
 #----------------------------------------------------------#
+SECOND_MS = 1000
+MINUTE_MS = 60000
+HOUR_MS = 3600000
 
-def change_time(time)
-	
-	# Will return changed time
-	"abc"
+# convert time to ms
+def to_ms(h, m, s, ms)
+	ms + (s * 1000) + (m * 60000) + (h * 3600000)
+end
+
+def format_result(ms)
+	h = ms / HOUR_MS
+	ms -= h * HOUR_MS
+  	h = h.to_s
+  
+	m = ms / MINUTE_MS
+	ms -= m * MINUTE_MS
+	m = m.to_s
+	  
+	s = ms / SECOND_MS
+	ms -= s * SECOND_MS
+	s = s.to_s
+	  
+	ms = ms.to_s
+	  
+	h = "0#{h}" if h.length == 1
+	m = "0#{m}" if m.length == 1
+	s = "0#{s}" if s.length == 1
+	if ms.length == 1
+	  ms = "00#{ms}"
+	elsif ms.length == 2
+	  ms = "0#{ms}"
+	end
+
+	"#{h}:#{m}:#{s},#{ms}"
 end
 
 def calculate_time(s, ms)
 	# do the time calculation
 	
+end
+
+def change_time(time, h, m, s, ms)
+	time =~ /(\d{2}):(\d{2}):(\d{2}),(\d+)/
+	ms_time = to_ms($1.to_i, $2.to_i, $3.to_i, $4.to_i) + to_ms(h, m, s, ms)
+	# Will return changed time
+	format_result(ms_time)
 end
 
 # If user pass two arguments, prints error and exit.
@@ -65,26 +101,21 @@ if options[:add] && options[:substract] == true
 end
 
 # Opening file..
-if options[:file]
-	file = options[:file].to_s
+inputfile = options[:file].to_s
+def write_file(input, output, h, m, s, ms)
+# if options[:file]
 	# file2 = Array.new
 	# File.readlines(input).each do |line|
-	File.open(file) do |file|
+	File.open(input) do |file|
 		# Get line with specific expression
-		# line2 =  line if (line[/\d{2}:\d{2}:\d{2}/])
 		@line2 = file.readlines.join
-		@line2.gsub!(/\d{2}:\d{2}:\d{2},\d+/) {|time| change_time(time)}
+		@line2.gsub!(/\d{2}:\d{2}:\d{2},\d+/) {|time| change_time(time, h, m, s, ms)}
 		# puts @line2
   		#puts line.gsub(/-->/, "CHANGED")
 	end
-	File.open("out.txt", "w") do |file|
+	File.open(output, "w") do |file|
     	file.write(@line2)
   	end
-end
-
-
-if options[:add]
-	puts "Adding.."
 end
 
 # \d is for digits
@@ -97,7 +128,14 @@ if options[:substract]
 	ms *= -1
 end
 
-calculate_time(s, ms)
+if options[:add]
+	inputtime = options[:time].to_s
+	puts "Shifting #{inputtime} seconds"
+end
+
+outputfile = ARGV[0]
+
+write_file(inputfile, outputfile, 0, 0, s, ms)
 
 # Debugging tools
 #puts Dir.pwd
